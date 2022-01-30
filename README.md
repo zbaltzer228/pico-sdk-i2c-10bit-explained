@@ -4,11 +4,11 @@
    The [RP2040 Datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
    suggests, in two places that I can find, that 10-bit i2c addressing is not supported in slave mode.
 
-   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/10biti2cEvidence1.jpg) |
+   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit-explained/develop/Support/10biti2cEvidence1.jpg) |
    |:--:|
    | Figure 1 - Suggesting 10-bit addressing is only available in Master mode|
 
-   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/10biti2cEvidence2.jpg) |
+   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit-explained/develop/Support/10biti2cEvidence2.jpg) |
    |:--:|
    | Figure 2 - Also suggesting 10-bit addressing is only available in Master mode |
 
