@@ -102,7 +102,7 @@ each time a i2c transaction takes place.
 |:--:|
 | Figure 8 - End of the i2c transaction |
 
-At the end, the periph releases control of the bus.
+At the end, the host has acknowledged the bytes its expects and stops driving SCL.
 
 ## In conclusion
 The RP2040 does, in fact, support 10-bit addressing in both host and peripheral modes.
