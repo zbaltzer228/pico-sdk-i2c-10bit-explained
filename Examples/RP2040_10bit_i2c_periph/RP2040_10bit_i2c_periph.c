@@ -61,7 +61,7 @@ int main()
 {
     stdio_init_all();
 
-    // I2C Initialisation. Using it at 400Khz.
+    // I2C Initialisation. Using it at 100Khz, set address to 0x02CF.
     i2c_init_10bit(I2C_PORT, 100*1000);
     i2c_set_slave_mode_10bit(I2C_PORT, true, 0x02CF);
 
