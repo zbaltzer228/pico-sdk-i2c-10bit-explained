@@ -17,7 +17,7 @@ int main()
     char receivedMessage[3];
     stdio_init_all();
 
-    // I2C Initialisation. Using it at 400Khz.
+    // I2C Initialisation. Using it at 100Khz with 10-bit addressing
     i2c_init_10bit(I2C_PORT, 100*1000);
 
     gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
