@@ -1,158 +1,110 @@
-# Raspberry Pi Pico SDK
+# Raspberry Pi Pico SDK with 10-bit i2c addressing support
+   As of v1.3.0 of the SDK, neither 10-bit i2c master mode nor 10-bit i2c slave mode is implemented.
 
-The Raspberry Pi Pico SDK (henceforth the SDK) provides the headers, libraries and build system
-necessary to write programs for the RP2040-based devices such as the Raspberry Pi Pico
-in C, C++ or assembly language.
+   The [RP2040 Datasheet](https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf)
+   suggests, in two places that I can find, that 10-bit i2c addressing is not supported in slave mode.
 
-The SDK is designed to provide an API and programming environment that is familiar both to non-embedded C developers and embedded C developers alike.
-A single program runs on the device at a time and starts with a conventional `main()` method. Standard C/C++ libraries are supported along with
-C level libraries/APIs for accessing all of the RP2040's hardware include PIO (Programmable IO).
+   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/10biti2cEvidence1.jpg) |
+   |:--:|
+   | Figure 1 - Suggesting 10-bit addressing is only available in Master mode|
 
-Additionally the SDK provides higher level libraries for dealing with timers, synchronization, USB (TinyUSB) and multi-core programming
-along with various utilities.
+   | ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/10biti2cEvidence2.jpg) |
+   |:--:|
+   | Figure 2 - Also suggesting 10-bit addressing is only available in Master mode |
 
-The SDK can be used to build anything from simple applications, to fully fledged runtime environments such as MicroPython, to low level software
-such as RP2040's on-chip bootrom itself.
+## Introducing 10-bit i2c addressing support
 
-Additional libraries/APIs that are not yet ready for inclusion in the SDK can be found in [pico-extras](https://github.com/raspberrypi/pico-extras).
+In the revised [i2c.h](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/src/rp2_common/hardware_i2c/include/hardware/i2c.h)
+there are 10 new functions
 
-# Documentation
+- i2c_init_10bit
+- i2c_set_slave_mode_10bit
+- i2c_write_blocking_until_10bit
+- i2c_read_blocking_until_10bit
+- i2c_write_timeout_us_10bit
+- i2c_write_timeout_per_char_us_10bit
+- i2c_read_timeout_us_10bit
+- i2c_read_timeout_per_char_us_10bit
+- i2c_write_blocking_10bit
+- i2c_read_blocking_10bit
 
-See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) for information on how to setup your
-hardware, IDE/environment and for how to build and debug software for the Raspberry Pi Pico
-and other RP2040-based devices.
+In the revised [i2c.c](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/src/rp2_common/hardware_i2c/i2c.c)
+there are 3 new functions
 
-See [Raspberry Pi Pico C/C++ SDK](https://rptl.io/pico-c-sdk) to learn more about programming using the
-SDK, to explore more advanced features, and for complete PDF-based API documentation.
+- i2c_reserved_addr_10bit
+- i2c_write_blocking_internal_10bit
+- i2c_read_blocking_internal_10bit
 
-See [Online Raspberry Pi Pico SDK API docs](https://rptl.io/pico-doxygen) for HTML-based API documentation.
+All prototypes are identical to their non-10-bit-qualified counterparts,
+except wherever there is a **uint8_t addr** parameter, it has been replaced with
+**uint16_t addr**.
 
-# Example code
+Their functionality is also identical, but adapted to 10-bit addressing.
 
-See [pico-examples](https://github.com/raspberrypi/pico-examples) for example code you can build.
-
-# Quick-start your own project
-
-These instructions are extremely terse, and Linux-based only. For detailed steps,
-instructions for other platforms, and just in general, we recommend you see [Raspberry Pi Pico C/C++ SDK](https://rptl.io/pico-c-sdk)
-
-1. Install CMake (at least version 3.13), and GCC cross compiler
-   ```
-   sudo apt install cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
-   ```
-1. Set up your project to point to use the Raspberry Pi Pico SDK
-
-   * Either by cloning the SDK locally (most common) :
-      1. `git clone` this Raspberry Pi Pico SDK repository
-      1. Copy [pico_sdk_import.cmake](https://github.com/raspberrypi/pico-sdk/blob/master/external/pico_sdk_import.cmake)
-         from the SDK into your project directory
-      2. Set `PICO_SDK_PATH` to the SDK location in your environment, or pass it (`-DPICO_SDK_PATH=`) to cmake later.
-      3. Setup a `CMakeLists.txt` like:
-
-          ```cmake
-          cmake_minimum_required(VERSION 3.13)
-
-          # initialize the SDK based on PICO_SDK_PATH
-          # note: this must happen before project()
-          include(pico_sdk_import.cmake)
-
-          project(my_project)
-
-          # initialize the Raspberry Pi Pico SDK
-          pico_sdk_init()
-
-          # rest of your project
-
-          ```
-
-   * Or with the Raspberry Pi Pico SDK as a submodule :
-      1. Clone the SDK as a submodule called `pico-sdk`
-      1. Setup a `CMakeLists.txt` like:
-
-          ```cmake
-          cmake_minimum_required(VERSION 3.13)
-
-          # initialize pico-sdk from submodule
-          # note: this must happen before project()
-          include(pico-sdk/pico_sdk_init.cmake)
-
-          project(my_project)
-
-          # initialize the Raspberry Pi Pico SDK
-          pico_sdk_init()
-
-          # rest of your project
-
-          ```
-
-   * Or with automatic download from GitHub :
-      1. Copy [pico_sdk_import.cmake](https://github.com/raspberrypi/pico-sdk/blob/master/external/pico_sdk_import.cmake)
-         from the SDK into your project directory
-      1. Setup a `CMakeLists.txt` like:
-
-          ```cmake
-          cmake_minimum_required(VERSION 3.13)
-
-          # initialize pico-sdk from GIT
-          # (note this can come from environment, CMake cache etc)
-          set(PICO_SDK_FETCH_FROM_GIT on)
-
-          # pico_sdk_import.cmake is a single file copied from this SDK
-          # note: this must happen before project()
-          include(pico_sdk_import.cmake)
-
-          project(my_project)
-
-          # initialize the Raspberry Pi Pico SDK
-          pico_sdk_init()
-
-          # rest of your project
-
-          ```
-
-1. Write your code (see [pico-examples](https://github.com/raspberrypi/pico-examples) or the [Raspberry Pi Pico C/C++ SDK](https://rptl.io/pico-c-sdk) documentation for more information)
-
-   About the simplest you can do is a single source file (e.g. hello_world.c)
-
-   ```c
-   #include <stdio.h>
-   #include "pico/stdlib.h"
-
-   int main() {
-       setup_default_uart();
-       printf("Hello, world!\n");
-       return 0;
-   }
-   ```
-   And add the following to your `CMakeLists.txt`:
-
-   ```cmake
-   add_executable(hello_world
-       hello_world.c
-   )
-
-   # Add pico_stdlib library which aggregates commonly used features
-   target_link_libraries(hello_world pico_stdlib)
-
-   # create map/bin/hex/uf2 file in addition to ELF.
-   pico_add_extra_outputs(hello_world)
-   ```
-
-   Note this example uses the default UART for _stdout_;
-   if you want to use the default USB see the [hello-usb](https://github.com/raspberrypi/pico-examples/tree/master/hello_world/usb) example.
+Example usage is found at [RP2040_10bit_i2c_host.c](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/Examples/RP2040_10bit_i2c_host/RP2040_10bit_i2c_host.c)
+ and [RP2040_10bit_i2c_periph.c](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/Examples/RP2040_10bit_i2c_periph/RP2040_10bit_i2c_periph.c)
 
 
-1. Setup a CMake build directory.
-      For example, if not using an IDE:
-      ```
-      $ mkdir build
-      $ cd build
-      $ cmake ..
-      ```
+### Overview of a 10-bit i2c transaction using the examples
 
-1. Make your target from the build directory you created.
-      ```sh
-      $ make hello_world
-      ```
+RP2040_10bit_i2c_host and RP2040_10bit_i2c_periph were built using the modified SDK here in this repo.
 
-1. You now have `hello_world.elf` to load via a debugger, or `hello_world.uf2` that can be installed and run on your Raspberry Pi Pico via drag and drop.
+Due to the limitations of the scope used to measure the i2c bus, the transaction
+will be split across 6 different pictures.
+
+In whole, the i2c host writes 2 bytes to the bus for address 0x02CF, then asks
+the device with address 0x02CF for 3 bytes in response.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/StartOfHostI2CWriteLabeled.jpg) |
+|:--:|
+| Figure 3 - Start of the i2c host write |
+
+The host initiates a transaction by dropping SDA while SCL is held high.
+
+The next 5 bits are a specific sequence, 0b11110, reserved by the i2c spec to signal a 10-bit transaction,
+followed by the 2 most significant bits of the 10-bit address, in this case 0x2.
+
+The next byte delivers the rest of the 10-bit address, 0xCF.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/EndOfHostI2CWriteLabeled.jpg) |
+|:--:|
+| Figure 4 - End of the i2c host write |
+
+Here, the 2 bytes are written to the bus, 0xA5 proceeded by 0x5A with the required ACK inbetween.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/StartOfHostI2CReqLabeled.jpg) |
+|:--:|
+| Figure 5 - Start of the i2c host read request |
+
+The host then starts a read request by transmitting the peripheral address, 0x02CF in a similar manner to Figure 3.
+The R/W bit suggests a write, even though this is a read request. This is solved by
+transmitting a 3rd byte with the Read bit set.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/EndOfHostI2CReqLabeled.jpg) |
+|:--:|
+| Figure 6 - Start of the i2c host read request |
+
+The host transmits its 3rd and final byte for the read request, this is a repeat of the first
+start byte, with the reserved 0b11110 and 2 most significant bits of the periph address,
+but with the Read bit set.
+
+The peripheral then holds SDA low while it prepares to transmit its data.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/StartOfPeriphI2CWrite.jpg) |
+|:--:|
+| Figure 7 - Start of the i2c periph write |
+
+The periph transmits its data and gets the required ACK, it transmits 3 bytes in total.
+The first being a constant 0x5A, and the last two bytes are a counter that is incremented
+each time a i2c transaction takes place.
+
+| ![](https://raw.githubusercontent.com/zbaltzer228/pico-sdk-i2c-10bit/develop/Support/EndOfPeriphI2CWriteLabeled.jpg) |
+|:--:|
+| Figure 8 - End of the i2c transaction |
+
+At the end, the periph releases control of the bus.
+
+## In conclusion
+The RP2040 does, in fact, support 10-bit addressing in both host and peripheral modes.
+The changes required to the SDK to fully support 10-bit addressing are provided in [i2c.h](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/src/rp2_common/hardware_i2c/include/hardware/i2c.h)
+and [i2c.c](https://github.com/zbaltzer228/pico-sdk-i2c-10bit/blob/develop/src/rp2_common/hardware_i2c/i2c.c)
